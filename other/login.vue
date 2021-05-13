@@ -1,23 +1,23 @@
 <template>
-	<view class="content" :style="{'backgroundColor': color_style.background_color, 'color': color_style.color}">
+	<view class="content" :style="{'backgroundColor': colorStyle.backgroundColor, 'color': colorStyle.color}">
 		<view class="input-group">
-			<view class="input-row border" :style="{'borderColor': color_style.bg_2 }">
+			<view class="input-row border" :style="{'borderColor': colorStyle.bg2 }">
 				<text class="title">{{$t("me.email")}}:</text>
-				<m-input class="m-input" type="email" clearable v-model="email" :placeholder='$t("me.email_placeholder")'></m-input>
+				<m-input class="m-input" type="email" clearable v-model="email" :placeholder='$t("me.emailPlaceholder")'></m-input>
 			</view>
-			<view class="input-row border" :style="{'borderColor': color_style.bg_2 }">
+			<view class="input-row border" :style="{'borderColor': colorStyle.bg2 }">
 				<text class="title">{{$t("me.password")}}:</text>
-				<m-input type="password" displayable v-model="password" :placeholder='$t("me.password_placeholder")'></m-input>
+				<m-input type="password" displayable v-model="password" :placeholder='$t("me.passwordPlaceholder")'></m-input>
 			</view>
 		</view>
 		
 		<view class="btn-row">
-			<button type="default"  :class="{'default': !color_style.style_id}" @tap="bindLogin">{{$t("me.login")}}</button>
+			<button type="default"  :class="{'default': !colorStyle.styleId}" @tap="emailLogin">{{$t("me.login")}}</button>
 		</view>
 		
 		<view class="action-row">
-			<navigator url="../common/reg" :style="{'color': color_style.color_2 }">{{$t("me.register_acount")}}</navigator>
-			<navigator url="../common/pwd" :style="{'color': color_style.color_2 }">{{$t("me.reset_password")}}</navigator>
+			<navigator url="../common/reg" :style="{'color': colorStyle.color2 }">{{$t("me.registerAcount")}}</navigator>
+			<navigator url="../common/pwd" :style="{'color': colorStyle.color2 }">{{$t("me.resetPassword")}}</navigator>
 		</view>
 		
 	</view>
@@ -30,9 +30,9 @@
 		mapMutations
 	} from 'vuex';
 	import mInput from '@/components/m-input.vue';
-	import user_service from "@/common/libs/user.js";
+	import userService from "@/common/libs/user.js";
 	export default {
-		computed: mapState(['user_id', 'user_name', 'user_token', 'has_login', 'color_style']),
+		computed: mapState(['userId', 'userName', 'userToken', 'hasLogin', 'colorStyle']),
 		components: {
 			mInput
 		},
@@ -45,67 +45,67 @@
 
 		methods: {
 
-			bindLogin() {
+			emailLogin() {
 				this.email = this.email.replace(/\s+/g, "");
-				if (!user_service.email_check(this.email)) {
+				if (!userService.emailCheck(this.email)) {
 					// #ifdef APP-PLUS
-					plus.nativeUI.toast(this.$t("me.email_not_available"));
+					plus.nativeUI.toast(this.$t("me.emailNotAvailable"));
 					// #endif				    
 					return;
 				}
 				if (this.password.length < 6) {
 					// #ifdef APP-PLUS
-					plus.nativeUI.toast(this.$t("me.password_must_6"));
+					plus.nativeUI.toast(this.$t("me.passwordMust6"));
 					// #endif                    
 					return;
 				}
 				// #ifdef APP-PLUS
-				plus.nativeUI.showWaiting(this.$t("common.logging_in"));
+				plus.nativeUI.showWaiting(this.$t("common.loggingIn"));
 				// #endif	
 
 				var req = {};
-				req.url = configs.server_url + "/user/email_login/";
+				req.url = configs.serverUrl + "/user/email_login/";
 				req.dataType = 'json';
 				req.data = {
 					email: this.email.trim().toLowerCase(),
 					password: this.password,
-					user_type: this.app_type
+					userType: this.appType
 				};
 
 				// register pushid
 				// #ifdef APP-PLUS
 				req.data.platform = plus.os.name.toLowerCase();
 				if (req.data.platform == "ios") {
-					var client_info = plus.push.getClientInfo();
-					req.data.push_cid = client_info.clientid;
-					req.data.push_token = client_info.token;
+					var clientInfo = plus.push.getClientInfo();
+					req.data.pushCid = clientInfo.clientid;
+					req.data.pushToken = clientInfo.token;
 				}
 				// #endif
 
 				req.method = "POST"
 				req.success = (res) => {
-					if (res.data.valid_user) {
+					if (res.data.validUser) {
 						// set login state
-						this.$store.state.user_id = res.data.user_id;
-						this.$store.state.user_name = res.data.user_name;
+						this.$store.state.userId = res.data.userId;
+						this.$store.state.userName = res.data.userName;
 						this.$store.state.email = res.data.email;
-						this.$store.state.user_token = res.data.user_token;
-						this.$store.state.user_addr = res.data.user_addr;
-						this.$store.state.has_login = true;
+						this.$store.state.userToken = res.data.userToken;
+						this.$store.state.userAddr = res.data.userAddr;
+						this.$store.state.hasLogin = true;
 
 						// Write to local cache
-						uni.setStorageSync("has_login", true);
-						uni.setStorageSync("user_id", res.data.user_id);
-						uni.setStorageSync("user_name", res.data.user_name);
+						uni.setStorageSync("hasLogin", true);
+						uni.setStorageSync("userId", res.data.userId);
+						uni.setStorageSync("userName", res.data.userName);
 						uni.setStorageSync("email", res.data.email);
-						uni.setStorageSync("user_token", res.data.user_token);
-						uni.setStorageSync("user_addr", res.data.user_addr);
+						uni.setStorageSync("userToken", res.data.userToken);
+						uni.setStorageSync("userAddr", res.data.userAddr);
 						// Cache client version number
 						uni.setStorageSync("version", configs.version);
 
 						// #ifdef APP-PLUS
 						plus.nativeUI.closeWaiting();
-						plus.nativeUI.toast(this.$t("common.logging_in_status_1"));
+						plus.nativeUI.toast(this.$t("common.loggingInStatus1"));
 						// #endif							
 						setTimeout(() => {
 							uni.navigateBack();
@@ -115,14 +115,14 @@
 					} else {
 						// #ifdef APP-PLUS
 						plus.nativeUI.closeWaiting();
-						plus.nativeUI.toast(this.$t("common.logging_in_status_0"));
+						plus.nativeUI.toast(this.$t("common.loggingInStatus0"));
 						// #endif							
 					}
 				};
 				req.fail = (res) => {
 					// #ifdef APP-PLUS
 					plus.nativeUI.closeWaiting();
-					plus.nativeUI.toast(this.$t("common.loading_communication_fail"));
+					plus.nativeUI.toast(this.$t("common.loadingCommunicationFail"));
 					// #endif
 				}
 				uni.request(req);
